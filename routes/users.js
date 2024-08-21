@@ -22,7 +22,7 @@ const router = express.Router();
  * admin.
  *
  * This returns the newly created user and an authentication token for them:
- *  {user: { username, firstName, lastName, email, isAdmin }, token }
+ *  {user: { username, password, email, isAdmin, orders }, token }
  *
  * Authorization required: admin
  **/
@@ -44,7 +44,7 @@ router.post("/", ensureAdmin, async function (req, res, next) {
 });
 
 
-/** GET / => { users: [ {username, firstName, lastName, email }, ... ] }
+/** GET / => { users: [ { username, password, email, isAdmin, orders }, ... ] }
  *
  * Returns list of all users.
  *
@@ -63,8 +63,8 @@ router.get("/", ensureAdmin, async function (req, res, next) {
 
 /** GET /[username] => { user }
  *
- * Returns { username, firstName, lastName, isAdmin, jobs }
- *   where jobs is { id, title, companyHandle, companyName, state }
+ * Returns { username, password, email, isAdmin, orders }
+ *   where orders is [{ id, phone, delivery_address, submit_time, items, user_order_id }, ...]
  *
  * Authorization required: admin or same user-as-:username
  **/

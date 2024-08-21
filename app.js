@@ -25,8 +25,8 @@ app.use(morgan("tiny"));
 app.use(authenticateJWT);
 
 app.use("/auth", authRoutes);
-app.use("/orders", ordersRoutes);
 app.use("/users", usersRoutes);
+app.use("/orders", ordersRoutes);
 app.use("/insects", insectsRoutes);
 
 

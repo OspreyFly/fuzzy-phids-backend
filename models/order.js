@@ -61,7 +61,7 @@ class Order {
 
     const { minTotal, maxTotal, user_order_id } = searchFilters;
 
-    if (minPrice > maxPrice) {
+    if (minTotal > maxTotal) {
       throw new BadRequestError("Min total cannot be greater than max");
     }
 

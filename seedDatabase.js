@@ -42,12 +42,9 @@ async function seedDatabase() {
     // Format data for SQL insertion
     const formattedData = data.map(item => {
         return `('${item.species}', ${item.price}, '${item.url_image}')`;
-    }).join(',\n');
+    });
 
-    const sqlInsertCommand = `
-        INSERT INTO insects (species, price, url_image) VALUES
-        ${formattedData};
-    `;
+    const sqlInsertCommand = `INSERT INTO insects (species, price, url_image) VALUES ${formattedData};`;
 
     try {
         await pool.query(sqlInsertCommand);

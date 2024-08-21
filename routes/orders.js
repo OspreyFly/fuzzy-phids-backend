@@ -20,10 +20,10 @@ const router = express.Router({ mergeParams: true });
  *
  * Returns { id, phone, delivery_address, submit_time, items, total, user_order_id  }
  *
- * Authorization required: admin
+ * Authorization required: none
  */
 
-router.post("/", ensureAdmin, async function (req, res, next) {
+router.post("/", async function (req, res, next) {
   try {
     const validator = jsonschema.validate(req.body, orderNewSchema);
     if (!validator.valid) {

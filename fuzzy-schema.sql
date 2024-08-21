@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS insects;
 CREATE TABLE insects (
   id SERIAL PRIMARY KEY,
   species VARCHAR(255) NOT NULL,
@@ -5,7 +6,7 @@ CREATE TABLE insects (
   url_image TEXT NOT NULL
 );
 
-
+DROP TABLE IF EXISTS orders;
 CREATE TABLE orders (
   id SERIAL PRIMARY KEY,
   phone VARCHAR(20) NOT NULL,
@@ -16,11 +17,12 @@ CREATE TABLE orders (
   user_order_id INTEGER  
 );
 
-
+DROP TABLE IF EXISTS users;
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
   username VARCHAR(25) NOT NULL,
   password TEXT NOT NULL,
   email TEXT NOT NULL CHECK (position('@' IN email) > 1),
+  is_admin BOOLEAN NOT NULL DEFAULT FALSE,
   orders INTEGER[] NOT NULL -- Array to reference multiple orders per user
 );

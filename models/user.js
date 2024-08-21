@@ -16,37 +16,49 @@ const { BCRYPT_WORK_FACTOR } = require("../config.js");
 class User {
   /** authenticate user with username, password.
    *
-   * Returns { username, first_name, last_name, email, is_admin }
+   * Returns { username, email, is_admin }
    *
    * Throws UnauthorizedError is user not found or wrong password.
    **/
 
   static async authenticate(username, password) {
-    // try to find the user first
-    const result = await db.query(
-          `SELECT username,
-                  password,
-                  first_name AS "firstName",
-                  last_name AS "lastName",
-                  email,
-                  is_admin AS "isAdmin"
-           FROM users
-           WHERE username = $1`,
-        [username],
-    );
-
-    const user = result.rows[0];
-
-    if (user) {
-      // compare hashed password to a new hash from password
-      const isValid = await bcrypt.compare(password, user.password);
-      if (isValid === true) {
-        delete user.password;
-        return user;
+    try {
+      // Query the database for the user
+      const result = await db.query(
+        `SELECT username,
+                password,
+                email,
+                is_admin AS "isAdmin"
+         FROM users
+         WHERE username = $1`,
+        [username]
+      );
+  
+      // Check if the user was found
+      if (result.rows.length === 0) {
+        throw new UnauthorizedError('User not found');
       }
+  
+      // Destructure the user row
+      const { password: storedPassword, isAdmin } = result.rows[0];
+  
+      // Compare the provided password with the stored hashed password
+      const isMatch = await bcrypt.compare(password, storedPassword);
+  
+      if (!isMatch) {
+        throw new UnauthorizedError('Wrong password');
+      }
+  
+      // If everything checks out, return the user details
+      return {
+        username,
+        email: result.rows[0].email,
+        isAdmin,
+      };
+    } catch (error) {
+      // Rethrow the error to be handled by the caller
+      throw error;
     }
-
-    throw new UnauthorizedError("Invalid username/password");
   }
 
   /** Register user with data.
@@ -57,7 +69,7 @@ class User {
    **/
 
   static async register(
-      { username, password, firstName, lastName, email, isAdmin }) {
+      { username, password, email, isAdmin }) {
     const duplicateCheck = await db.query(
           `SELECT username
            FROM users
@@ -75,19 +87,17 @@ class User {
           `INSERT INTO users
            (username,
             password,
-            first_name,
-            last_name,
             email,
-            is_admin)
-           VALUES ($1, $2, $3, $4, $5, $6)
-           RETURNING username, first_name AS "firstName", last_name AS "lastName", email, is_admin AS "isAdmin"`,
+            is_admin,
+            orders)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING username, password, email, is_admin AS "isAdmin"`,
         [
           username,
           hashedPassword,
-          firstName,
-          lastName,
           email,
           isAdmin,
+          []
         ],
     );
 
@@ -98,16 +108,16 @@ class User {
 
   /** Find all users.
    *
-   * Returns [{ username, first_name, last_name, email, is_admin }, ...]
+   * Returns [{ username, password, email, is_admin, orders }, ...]
    **/
 
   static async findAll() {
     const result = await db.query(
           `SELECT username,
-                  first_name AS "firstName",
-                  last_name AS "lastName",
+                  password,
                   email,
-                  is_admin AS "isAdmin"
+                  is_admin AS "isAdmin",
+                  orders
            FROM users
            ORDER BY username`,
     );
@@ -117,7 +127,7 @@ class User {
 
   /** Given a username, return data about user.
    *
-   * Returns { username, first_name, last_name, is_admin, orders }
+   * Returns { username, password, email, is_admin, orders }
    *   where orders is { id, phone, delivery_address, submit_time, items, user_order_id }
    *
    * Throws NotFoundError if user not found.
@@ -127,10 +137,10 @@ class User {
     const userRes = await db.query(
           `SELECT id,
                   username,
-                  first_name AS "firstName",
-                  last_name AS "lastName",
+                  password,
                   email,
-                  is_admin AS "isAdmin"
+                  is_admin AS "isAdmin",
+                  orders
            FROM users
            WHERE username = $1`,
         [username],
@@ -155,9 +165,9 @@ class User {
    * all the fields; this only changes provided ones.
    *
    * Data can include:
-   *   { firstName, lastName, password, email, isAdmin }
+   *   { username, password, email }
    *
-   * Returns { username, firstName, lastName, email, isAdmin }
+   * Returns { username, password, email }
    *
    * Throws NotFoundError if not found.
    *
@@ -174,9 +184,9 @@ class User {
     const { setCols, values } = sqlForPartialUpdate(
         data,
         {
-          firstName: "first_name",
-          lastName: "last_name",
-          isAdmin: "is_admin",
+          username: "username",
+          password: "password",
+          isAdmin: "isAdmin",
         });
     const usernameVarIdx = "$" + (values.length + 1);
 
@@ -184,8 +194,7 @@ class User {
                       SET ${setCols} 
                       WHERE username = ${usernameVarIdx} 
                       RETURNING username,
-                                first_name AS "firstName",
-                                last_name AS "lastName",
+                                "password",
                                 email,
                                 is_admin AS "isAdmin"`;
     const result = await db.query(querySql, [...values, username]);
