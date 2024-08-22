@@ -6,35 +6,48 @@ const { BadRequestError, NotFoundError } = require("../expressError");
 class Order {
     /** Create a order (from data), update db, return new order data.
    *
-   * data should be { phone, delivery_address, submit_time, items, total, user_order_id }
+   * data should be { phone, delivery_address, items, total, user_order_id }
    *
    * Returns { id, phone, delivery_address, submit_time, items, total, user_order_id }
    *
    * Throws BadRequestError if order already in database.
    * */
-  static async create({ phone, delivery_address, submit_time, items, total, user_order_id }) {
-    const duplicateCheck = await db.query(
-          `SELECT user_order_id, submit_time
-           FROM orders
-           WHERE user_order_id = $1, submit_time = $2`,
-        [user_order_id, submit_time]);
+    static async create({ phone, delivery_address, items, total, user_order_id }) {
+      // Ensure items is an array of objects with an 'id' property
+      if (!Array.isArray(items) || !items.every(item => typeof item === 'object' && typeof item.id === 'number')) {
+        throw new Error('Invalid items format');
+      }
+    
+      const duplicateCheck = await db.query(
+            `SELECT user_order_id, total
+             FROM orders
+             WHERE user_order_id = $1 AND total = $2`,
+          [user_order_id, total]);
+    
+      if (duplicateCheck.rows[0]) {
+        throw new BadRequestError(`Duplicate order: ${user_order_id} $${total}`);
+      }
+    
+      // Transform items array of objects into an array of IDs
+      const itemIds = items.map(item => item.id);
+      const itemJson = JSON.stringify(itemIds); // Convert array to JSON string
 
-    if (duplicateCheck.rows[0])
-      throw new BadRequestError(`Duplicate order: ${user_order_id + "@" + submit_time}`);
-
-    const result = await db.query(
-          `INSERT INTO orders
-           (phone, delivery_address, submit_time, items, total, user_order_id)
-           VALUES ($1, $2, $3, $4, $5)
-           RETURNING id, phone, delivery_address, submit_time, items, total, user_order_id`,
-        [
-            phone, delivery_address, submit_time, items, total, user_order_id
-        ],
-    );
-    const order = result.rows[0];
-
-    return order;
-  }
+    
+      const result = await db.query(
+            `INSERT INTO orders
+             (phone, delivery_address, items, total, user_order_id)
+             VALUES ($1, $2, $3::jsonb, $4, $5)
+             RETURNING id, phone, delivery_address, submit_time, items, total, user_order_id`,
+          [
+              phone, delivery_address, itemJson, total, user_order_id
+          ],
+      );
+      const order = result.rows[0];
+    
+      return order;
+    }
+    
+    
 
   /** Find all orders (optional filter on searchFilters).
    *

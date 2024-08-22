@@ -8,7 +8,7 @@ const express = require("express");
 const { BadRequestError } = require("../expressError");
 const { ensureAdmin } = require("../middleware/auth");
 const Order = require("../models/order");
-const orderNewSchema = require("../schemas/orderNew.json");
+const orderNew = require("../schemas/orderNew.json");
 const ordersearchSchema = require("../schemas/orderSearch.json");
 
 const router = express.Router({ mergeParams: true });
@@ -16,7 +16,7 @@ const router = express.Router({ mergeParams: true });
 
 /** POST / { order } => { order }
  *
- * order should be { phone, delivery_address, submit_time, items, total, user_order_id }
+ * order should be { phone, delivery_address, items, total, user_order_id }
  *
  * Returns { id, phone, delivery_address, submit_time, items, total, user_order_id  }
  *
@@ -25,12 +25,12 @@ const router = express.Router({ mergeParams: true });
 
 router.post("/", async function (req, res, next) {
   try {
-    const validator = jsonschema.validate(req.body, orderNewSchema);
+    const validator = jsonschema.validate(req.body, orderNew);
     if (!validator.valid) {
       const errs = validator.errors.map(e => e.stack);
       throw new BadRequestError(errs);
     }
-
+    console.log(req.body);
     const order = await Order.create(req.body);
     return res.status(201).json({ order });
   } catch (err) {

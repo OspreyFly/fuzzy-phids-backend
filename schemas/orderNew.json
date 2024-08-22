@@ -13,9 +13,6 @@
             "minLength": 1,
             "maxLength": 10
         },
-        "submit_time": {
-            "type": "string"
-        },
         "total": {
             "type": "integer",
             "minimum": 0
@@ -24,15 +21,13 @@
             "type": "array"
         },
         "user_order_id": {
-            "type": "integer",
-            "minimum": 0
+            "type": "integer"
         }
     },
     "additionalProperties": false,
     "required": [
         "phone",
         "delivery_address",
-        "submit_time",
         "total",
         "items",
         "user_order_id"

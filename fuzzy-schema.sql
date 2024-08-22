@@ -24,5 +24,6 @@ CREATE TABLE users (
   password TEXT NOT NULL,
   email TEXT NOT NULL CHECK (position('@' IN email) > 1),
   is_admin BOOLEAN NOT NULL DEFAULT FALSE,
-  orders INTEGER[] NOT NULL -- Array to reference multiple orders per user
+  orders INTEGER[] NOT NULL, -- Array to reference multiple orders per user
+  FOREIGN KEY (orders) REFERENCES orders(id) ON DELETE CASCADE
 );
