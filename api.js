@@ -6,7 +6,7 @@ const PEXELS_API_KEY = 'qSZndJabj877sDPiqQnZmUXQ7CoJGGk6NSeMr3dVgI6oqn17ZjZEPfrh
 const PEXELS_BASE_URL = 'https://api.pexels.com/v1/search';
 
  async function generateData() {
-    const numberOfInsects = 10; // Number of insects to generate
+    const numberOfInsects = 25; // Number of insects to generate
     const insectsData = [];
 
     // Generate initial data using Faker
