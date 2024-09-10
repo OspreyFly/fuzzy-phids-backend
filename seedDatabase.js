@@ -18,7 +18,7 @@ async function main() {
         await seedDatabase();
         console.log('Database setup and seeding completed successfully.');
     } catch (err) {
-        console.error(err);
+       // console.error(err);
     } finally {
         pool.end();
     }
@@ -32,7 +32,7 @@ async function runSQLFile(filePath) {
         await pool.query(sqlCommands);
         console.log(`Schema created successfully.`);
     } catch (err) {
-        console.error(`Error executing SQL file ${filePath}:`, err.stack);
+        //console.error(`Error executing SQL file ${filePath}:`, err.stack);
     }
 }
 

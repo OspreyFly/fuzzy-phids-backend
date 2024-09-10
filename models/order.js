@@ -17,8 +17,8 @@ class Order {
       if (!Array.isArray(items) || !items.every(item => typeof item === 'object' && typeof item.id === 'number')) {
         throw new Error('Invalid items format');
       }
-    
-      const duplicateCheck = await db.query(
+      // Need to revisit duplicate handling on front and back end because a user could mean to make the same order twice in some cases.
+      /* const duplicateCheck = await db.query(
             `SELECT user_order_id, total
              FROM orders
              WHERE user_order_id = $1 AND total = $2`,
@@ -26,7 +26,7 @@ class Order {
     
       if (duplicateCheck.rows[0]) {
         throw new BadRequestError(`Duplicate order: ${user_order_id} $${total}`);
-      }
+      } */
     
       // Transform items array of objects into an array of IDs
       const itemIds = items.map(item => item.id);
